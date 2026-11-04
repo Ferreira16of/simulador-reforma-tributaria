@@ -175,6 +175,10 @@ function dynS3(){const p2=v=>rate(v).replace('%','');
       rep(o.e,s=>s.replace(/^15% da matriz de custeio.*$/,`a parcela das compras de fornecedores do Simples Nacional não gera crédito; o % no Regime Normal vem da planilha Regime Tributário (Assertif), por empresa (de ${g(lo)}% a ${g(hi)}%, ver slide 4).`).replace(/Crédito sobre 85% dos custos e despesas elegíveis \(regime normal\)\./,`Crédito sobre ${g(lo)}% a ${g(hi)}% dos custos e despesas elegíveis, conforme o Regime Normal de cada empresa.`))}
   })}
 function dynS4(){
+  const FX=[['Fonte: planilha Aliquotas_Fluxo (aba Fluxo) e DF - Mensal das empresas, 2027.','Fonte: DF - Mensal 2027 de cada empresa (planilhas de origem), recalculada com as premissas da simulação.'],
+   ['Créditos de CAPEX conforme a planilha (zerados no fluxo mensal de Grãos do Piauí, MCP01 e Rota da Integração).','Créditos de CAPEX conforme a DF - Mensal de cada empresa (planilhas de origem).'],
+   ['RT: aba Fluxo 2027,','RT: fluxo 2027 (DF - Mensal),'],['RT: planilha Fluxo 2027,','RT: fluxo 2027 (DF - Mensal),']];
+  allEls().forEach(o=>rep(o.e,t=>{let r=t;FX.forEach(([a,b])=>{if(r.includes(a))r=r.replace(a,b)});return r}));
   allEls().forEach(o=>{if(o.t.startsWith('Fonte: planilha Aliquotas_Fluxo'))rep(o.e,s=>s.replace('(aba Premissas).','(aba Premissas); % de crédito (Regime Normal) da planilha Regime Tributário (Assertif).'))});
   allEls().forEach(o=>{if(!o.t.includes('IR/CS'))return;const bx=o.e;
     // descobre a empresa pelo título da caixa acima (mesmo x, y-39)
