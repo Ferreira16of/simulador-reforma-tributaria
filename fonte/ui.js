@@ -1,15 +1,15 @@
 // ===== Slide 20 (adicional): linhas consideradas no redutor =====
 const LIN={
-graos:{cp:['Transcerrados – CP Proteção','Transcerrados – CP Fixa','Aditivo – CP Fixa'],loc:[],no:'Receita Tarifária, Receita Acessória, Construção e Remuneração do Ativo Financeiro'},
-mobi:{cp:['Contraprestação Pecuniária'],loc:['Rec. Acessórias – Locação'],no:'Desconto IFRS 09, Publicidade (Outdoor e Mercado), Naming Rights, Remuneração do Ativo Financeiro, Construção'},
-leste:{cp:['Contraprestação OPEX'],loc:['Locação Espaço p/ Construção (ABL AE Carvalho, a partir de 2029; demais zeradas)'],no:'Receita Financeira IFRS 09, ABL Interna, Publicidade, Naming Right'},
-norte:{cp:['Contraprestação CAPEX','Contraprestação OPEX'],loc:[],no:'Receita Acessória e Receita de Construção'},
-sul:{cp:['Contraprestação CAPEX','Contraprestação OPEX'],loc:[],no:'Receita Acessória e Receita de Construção'},
-mercosul:{cp:[],loc:[],no:'Sem contraprestação nem locação: receita tarifária (Argentina e Brasil), serviços CUF, acessórias e recomposição'},
-mcp01:{cp:[],loc:[],no:'Sem contraprestação nem locação (Receita Bruta de Serviços)'},
-welfare:{cp:[],loc:[],no:'Sem contraprestação nem locação: receita por município (saneamento)'},
-lote6:{cp:[],loc:[],no:'Sem contraprestação nem locação identificadas na planilha'},
-rota:{cp:[],loc:[],no:'Sem contraprestação nem locação: Receita Tarifária (pedágio) e Receita Reequilíbrio'}};
+graos:{cp:['Receita Contraprestação (Transcerrados – CP Proteção, CP Fixa e Aditivo – CP Fixa)'],loc:['Receita Acessória'],no:'Receita Tarifária (Transcerrados e Aditivo); Remuneração do Ativo Financeiro e Construção (fora da base do CBS)'},
+mobi:{cp:['Contraprestação Contratual (base do CBS; Desconto IFRS 09 e Pecuniária derivam dela)'],loc:['Rec. Acessórias – Locação','Publicidade – Outdoor e Mercado','Naming Rights'],no:'Remuneração do Ativo Financeiro e Construção (fora da base do CBS)'},
+leste:{cp:['Contraprestação OPEX','Receita Financeira IFRS 09'],loc:['Locação Espaço p/ Construção (4 linhas)','ABL Interna – Todos Terminais','Publicidade – Todos Terminais','Naming Right'],no:'Receita de Construção'},
+norte:{cp:['Receita de Operação – Contábil','Receita Financeira (IFRIC 12)'],loc:[],no:'Receita Acessória (zerada) e Receita de Construção'},
+sul:{cp:['Receita de Operação – Contábil','Receita Financeira (IFRIC 12)'],loc:[],no:'Receita Acessória (zerada) e Receita de Construção'},
+mercosul:{cp:[],loc:[],no:'Sem redução: receita tarifária (Argentina e Brasil), serviços CUF, acessórias e recomposição'},
+mcp01:{cp:['Receita Bruta (toda a receita)'],loc:[],no:'Receita de Construção'},
+welfare:{cp:[],loc:[],no:'Sem redução: receita por município (saneamento)'},
+lote6:{cp:[],loc:['Receita Acessória (1,5% da receita, proporção da planilha 9906)'],no:'Receita Tarifária'},
+rota:{cp:[],loc:[],no:'Sem redução: Receita Tarifária (pedágio) e Receita Reequilíbrio'}};
 function Pzero(){const q=Object.assign({},P);q.redutor={};q.redutorLoc={};YEARS.forEach(y=>{q.redutor[y]=0;q.redutorLoc[y]=0});return q}
 function shareLoc(k,y){const Y=B.empresas[k].years[y];return(Y&&Y.comp&&Y.comp.RB&&Y.comp.RB.shareLoc)||0}
 function shareOf(k,y){const Y=B.empresas[k].years[y];return(Y&&Y.comp&&Y.comp.RB&&Y.comp.RB.shareCP)||0}
@@ -39,8 +39,8 @@ function dynRedutor(){
    +`<div class="sh hast" style="left:36px;top:107px;width:900px;height:18px"><div class="tx">${mk('QUAIS RECEITAS RECEBEM A REDUÇÃO, EMPRESA A EMPRESA',12,1,'#17365D')}</div></div>`;
   cv.insertAdjacentHTML('beforeend',ttl+h);
   const t=$('tredut'),top=t.offsetTop+t.offsetHeight+8;
-  const bl=['A CBS e o IBS da Receita Bruta caem na proporção de cada linha: alíquota efetiva = alíquota × (1 − redutor × % contraprestação − redução × % locação). Locação: Rec. Acessórias – Locação (CS Mobi) e Locação Espaço p/ Construção (Bloco Leste).',
-   'Receita tarifária, acessória (exceto locação), construção e financeira não são reduzidas. Créditos, ISS e IR/CSLL não mudam (o crédito segue o % de fornecedores no Regime Normal). Norte e Sul: contraprestação = 100% da receita tributada.'];
+  const bl=['A CBS e o IBS da Receita Bruta caem na proporção de cada linha: alíquota efetiva = alíquota × (1 − redutor × % contraprestação − redução × % locação). Linhas reduzidas conforme a planilha Base_Redução: 44,2% nas contraprestações e receitas financeiras (e em toda a Receita Bruta da MCP01); 70% na receita acessória, locação, ABL, publicidade e naming rights.',
+   'Receita tarifária, construção e as demais linhas fora da tabela não são reduzidas. Créditos, ISS e IR/CSLL não mudam (o crédito segue o % de fornecedores no Regime Normal).'];
   cv.insertAdjacentHTML('beforeend',`<div class="sh hast" style="left:36px;top:${top}px;width:1204px;height:70px"><div class="tx">${bl.map(x=>mk('• '+x,11,0,'#293746','left','margin-top:2px')).join('')}</div></div>`);
 }
 // ===== Aplicação =====

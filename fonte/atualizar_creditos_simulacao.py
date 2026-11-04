@@ -37,6 +37,31 @@ B = Font(bold=True)
 def main(src, out, bases):
     wb = openpyxl.load_workbook(src)
     B_ = json.load(open(bases, encoding='utf8'))['empresas']
+
+    # --- Conferência das linhas de ORIGEM com a DF (bases.json vem das DFs das empresas) ------------------------------------
+    # Mercosul: a planilha original trazia ISS = 0 de 2028 a 2033 (Antes e Depois), embora a DF tenha ISS (e o total de deduções da DF o inclua).
+    # Regra: ISS Antes = deduções Atual da DF − PIS/COFINS − IIBB ;  ISS Depois = deduções RT da DF − IIBB (somente anos com fase de ISS > 0).
+    ISS_PH = {2026: 1, 2027: 1, 2028: 1, 2029: .9, 2030: .8, 2031: .7, 2032: .6, 2033: 0}
+    NOME = {'GRÃOS': 'graos', 'CS MOBI': 'mobi', 'BLOCO LESTE': 'leste', 'MERCOSUL': 'mercosul', 'ESCOLAS NORTE': 'norte',
+            'ESCOLAS SUL': 'sul', 'MCP01': 'mcp01', 'WELFARE': 'welfare', 'ROTA': 'rota'}
+    for aba, k in NOME.items():
+        if aba not in wb.sheetnames or k not in B_: continue
+        ws_ = wb[aba]
+        for j, y in enumerate(range(2026, 2034)):
+            col = 17 + j
+            Y = B_[k]['years'].get(str(y))
+            if not Y or not Y['comp'].get('DED'): continue
+            ded = Y['comp']['DED']; fx = ded.get('fixed', 0.0)
+            v103, v104, v105, v114 = (ws_.cell(r, col).value for r in (103, 104, 105, 114))
+            if not all(isinstance(x, (int, float)) for x in (v103, v104, v114)): continue
+            iss_antes = Y['atual']['DED'] - fx - v103          # DF: deduções totais − IIBB − PIS/COFINS
+            if abs(iss_antes - v104) > 1:
+                print('  [DF] %s %d: ISS Antes %.1f -> %.1f (a planilha original trazia a linha de ISS diferente da DF)' % (aba, y, v104, iss_antes))
+                ws_.cell(104, col).value = iss_antes
+            iss_dep = ded['def'] - fx
+            if ISS_PH[y] > 0 and abs(iss_dep - v114) > 1:
+                print('  [DF] %s %d: ISS Depois %.1f -> %.1f' % (aba, y, v114, iss_dep))
+                ws_.cell(114, col).value = iss_dep
     pr = wb['Premissas']
     pr['B8'] = 'Alíquotas da simulação (CBS, IBS e redutores) — aplicadas às abas das empresas'; pr['B8'].font = B
     pr['B9'] = 'Ano'; pr['B9'].font = B
@@ -134,6 +159,13 @@ def main(src, out, bases):
                 ws.cell(tr, col).value = f
                 nform += 1
     wb.calculation.fullCalcOnLoad = True
+    if 'Leitura' in wb.sheetnames:
+        wl = wb['Leitura']; rr = 40
+        while wl.cell(rr, 2).value: rr += 1
+        wl.cell(rr, 2).value = ('Correção Mercosul (ISS 2028–2033): a planilha original trazia ISS Antes e Depois = 0 nesses anos, embora a DF tenha ISS nas deduções '
+                                '(Antes: -864 em 2028 a -1.278 em 2033; Depois: acompanha a transição, -864 em 2028 a 0 em 2033). As linhas 104 e 114 da aba MERCOSUL passaram a vir da DF '
+                                '(deduções da DF − PIS/COFINS − IIBB). Todas as outras empresas foram conferidas contra a DF e não tinham essa falha.')
+        wl.cell(rr, 2).alignment = wl.cell(rr - 1, 2).alignment.copy() if wl.cell(rr - 1, 2).alignment else None
     wb.save(out)
     print('fórmulas gravadas:', nform, '->', out)
 
