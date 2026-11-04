@@ -20,7 +20,7 @@ function valDRE(r,lab){const a=r.atual,t=r.rt;if(lab==='Resultado Financeiro')re
 function arrow(a,t){if(Math.abs(a)<0.5&&Math.abs(t)<0.5)return'= 0%';if(Math.abs(t-a)<1e-6)return'= 0%';if(Math.abs(a)<0.5)return t>0?'▲ novo':'▼ novo';const v=(t-a)/Math.abs(a);const s=Math.round(Math.abs(v)*100)+'%';return(v>0?'▲ ':'▼ ')+s}
 const fz=(v,dd)=>Math.abs(v)<0.5*Math.pow(10,-dd)?'0':fmt(v,dd);
 function dynDRE(si){
-  const cons=si===14,k=cons?null:(si===21?'lote6':OR9[si-5]),d=cons?1:0,sc=cons?1000:1;
+  const cons=si===14,k=cons?null:(si===21?'lote6':OR9[si-5]),d=0,sc=1;
   const els=allEls();const labs=els.filter(o=>Math.abs(o.x-34.56)<1&&o.t).sort((a,b)=>a.y-b.y);
   const eff={};let prev=null;labs.forEach(o=>{if(o.t==='% Margem')eff[Math.round(o.y)]=['M',prev];else{eff[Math.round(o.y)]=['V',o.t];prev=o.t}});
   els.forEach(o=>{const ey=eff[Math.round(o.y)];if(!ey||o.x<100)return;
@@ -28,6 +28,7 @@ function dynDRE(si){
       const y=2026+bi;const r=cons?CONS(y):CY(k,y);
       const[kind,lab]=ey;if(kind==='V'&&!(lab in FLD)&&lab!=='Resultado Financeiro'&&lab!=='EBIT'&&!lab.startsWith('↳'))return;
       if(!r){if(o.t!=='')setTxt(o.e,'—');return}if(kind==='V'&&!(lab in FLD)&&lab!=='Resultado Financeiro'&&lab!=='EBIT'&&!lab.startsWith('↳'))return;
+      if(cons&&ci<3)o.e.querySelectorAll('span').forEach(s=>s.style.fontSize='9.3px');
       if(kind==='V'){let[a,t]=valDRE(r,lab);a/=sc;t/=sc;const dl=t-a;
         if(lab.startsWith('↳')){if(ci===0)setTxt(o.e,fz(a,d));else if(ci===1)setTxt(o.e,fz(t,d));else if(ci===2)setTxt(o.e,fz(dl,d),dl<-1e-9?RED:dl>1e-9?GRN:null);else setTxt(o.e,arrow(a,t),(t-a)<-1e-9?RED:(t-a)>1e-9?GRN:null);return}
         if(ci===0)setTxt(o.e,fz(a,d));else if(ci===1)setTxt(o.e,fz(t,d));
@@ -49,7 +50,7 @@ function dynDRE(si){
     if(anyTot){const sp=anyTot.querySelector('span');if(sp)sp.textContent=rate(sum)}
   })}else{
     els.filter(o=>o.t.startsWith('• Δ Receita Bruta')).forEach(o=>{const bi=Math.round((o.x-141)/184.8);const y=2026+bi;const r=CONS(y);if(!r)return;
-      const f=(lab,k2)=>{const a=r.atual[k2],t=r.rt[k2],dl=t-a;return `• Δ ${lab}: ${fz(dl/1000,1)} mi (${p1(dl/Math.abs(a))})`};
+      const f=(lab,k2)=>{const a=r.atual[k2],t=r.rt[k2],dl=t-a;return `• Δ ${lab}: ${fz(dl,0)} mil (${p1(dl/Math.abs(a))})`};
       const ps=o.e.querySelectorAll('.pp');const arr=[f('Receita Bruta','RB'),f('EBITDA','EBITDA'),f('Lucro Líquido','LL')];ps.forEach((pe,i)=>setP(pe,arr[i].replace(/^• /,'')))})
   }
 }
@@ -58,6 +59,9 @@ function tbl(n){return document.querySelector(`#cv table.tb[data-n="${n}"]`)}
 function cell(tb,r,c,txt,color){const row=tb.rows[r];if(!row)return;let ci=0,td=null;for(const t of row.cells){const span=t.colSpan||1;if(c>=ci&&c<ci+span){td=t;break}ci+=span}if(!td)return;const sp=td.querySelector('span');if(!sp)return;sp.textContent=txt;if(color)sp.style.color=color}
 const colS=(v)=>v<-1e-9?RED:v>1e-9?GRN:null;
 function nsPct(a,t){if(Math.abs(a)<1e-9)return'–';if((a>0&&t<0)||(a<0&&t>0))return'n.s.';return p1((t-a)/Math.abs(a))}
+function fitBelow(tb,noteN,srcN){const cv=document.getElementById('cv'),sc=cv.getBoundingClientRect().width/1280;const bot=(tb.getBoundingClientRect().bottom-cv.getBoundingClientRect().top)/sc;
+  const nt=document.querySelector(`#cv .sh[data-n="${noteN}"]`);if(!nt)return;const h=nt.getBoundingClientRect().height/sc;const top=Math.max(parseFloat(nt.style.top),bot+6);nt.style.top=top+'px';
+  const sr=document.querySelector(`#cv .sh[data-n="${srcN}"]`);if(sr){const need=top+h+2;if(parseFloat(sr.style.top)<need)sr.style.top=Math.min(need,684)+'px'}}
 // ---- slide 15: fluxo mensal
 function dynFlux(){const f=FLC(),r=f.rt;const tb=tbl('Table 516');if(!tb)return;grow(tbl('Table 517'),9);
   const rowsK=[['deb',2],['opex',3],['capex',4],['mov',5],['des',6],['res',7]];
@@ -66,6 +70,7 @@ function dynFlux(){const f=FLC(),r=f.rt;const tb=tbl('Table 516');if(!tb)return;
   const t2=tbl('Table 517');
   ORS().forEach((k,i)=>{cell(t2,1+i,0,NAMES[k]);const x=FL(k).rt;['deb','opex','capex','mov','des','res'].forEach((c,j)=>cell(t2,1+i,1+j,fmt(sum(x[c]))))});
   ['deb','opex','capex','mov','des','res'].forEach((c,j)=>cell(t2,1+ORS().length,1+j,fmt(sum(r[c]))));
+  if(L6)fitBelow(t2,'TextBox 515','TextBox 507');
   const ch=document.querySelector('#cv .chart[data-n="Chart 514"]');
   if(ch)ch.innerHTML=chartBars(ch,{title:'Movimentação mensal consolidada (R$ mil)',cats:MESES,series:[{name:'RT',v:r.mov,color:'#2F75B5'}],fmtv:v=>fmt(v)});
 }
@@ -87,18 +92,18 @@ function chartBars(ch,o){const W=parseFloat(ch.style.width),H=parseFloat(ch.styl
 // ---- slide 16: movimentação atual x RT
 function dynMov(){const f=FLC(),r=f.rt,a=f.at;const tb=tbl('Table 511');if(!tb)return;
   const K=['deb','opex','capex','mov','des','res'];
-  const A=K.map(k=>a[k]/1000),T=K.map(k=>sum(r[k])/1000);
-  const d1=v=>Math.abs(v)<0.05?'–':fmt(v,1);
-  K.forEach((k,i)=>{cell(tb,1+i,1,d1(A[i]));cell(tb,1+i,2,d1(T[i]));cell(tb,1+i,3,fmt(T[i]-A[i],1),colS(T[i]-A[i]))});
+  const A=K.map(k=>a[k]),T=K.map(k=>sum(r[k]));
+  const d1=v=>Math.abs(v)<0.5?'–':fmt(v);
+  K.forEach((k,i)=>{cell(tb,1+i,1,d1(A[i]));cell(tb,1+i,2,d1(T[i]));cell(tb,1+i,3,fmt(T[i]-A[i]),colS(T[i]-A[i]))});
   const ch=document.querySelector('#cv .chart[data-n="Chart 513"]');
-  if(ch)ch.innerHTML=chartBars(ch,{title:'Atual × RT (R$ milhões)',cats:['Débitos','Créditos OPEX','Créditos CAPEX','Movimentação','Desembolso','Restituição'],series:[{name:'Modelo atual',v:A.map(v=>Math.round(v*10)/10),color:'#8A98A8'},{name:'RT',v:T.map(v=>Math.round(v*10)/10),color:'#2F75B5'}],labels:1,fmtv:v=>fmt(v,1),legend:1,rot:1,axf:v=>fmt(v)});
+  if(ch)ch.innerHTML=chartBars(ch,{title:'Atual × RT (R$ mil)',cats:['Débitos','Créditos OPEX','Créditos CAPEX','Movimentação','Desembolso','Restituição'],series:[{name:'Modelo atual',v:A.map(v=>Math.round(v)),color:'#8A98A8'},{name:'RT',v:T.map(v=>Math.round(v)),color:'#2F75B5'}],labels:1,fmtv:v=>fmt(v),legend:1,rot:1,axf:v=>fmt(v)});
   const be=allEls().find(o=>o.t.startsWith('• Modelo atual'));
-  if(be){const ps=be.e.querySelectorAll('.pp');const m=(x)=>fmt(x,1);
+  if(be){const ps=be.e.querySelectorAll('.pp');const m=(x)=>(x<-0.5?'-':'')+fmt(Math.abs(x));
    const big=T[2]>T[1]?'créditos de CAPEX':'créditos de OPEX/SG&A';
-   const txt=[`Modelo atual: débitos de ${m(A[0])} mi e créditos de ${m(A[1])} mi resultam em movimentação de ${m(A[3])} mi, integralmente desembolso de caixa.`,
-    `Reforma Tributária: débitos de ${m(T[0])} mi, compensados por créditos de OPEX/SG&A (${m(T[1])} mi) e de CAPEX (${m(T[2])} mi), geram movimentação líquida de ${m(T[3])} mi.`,
-    `Impacto no caixa (por CNPJ): desembolso de ${m(T[4])} mi e restituição de ${m(T[5])} mi. ${T[3]>0?'A movimentação líquida positiva não elimina o desembolso, porque o crédito de uma empresa não paga o débito de outra.':'Créditos de uma empresa não pagam o débito de outra.'}`,
-    `Variação da movimentação: ${m(T[3]-A[3])} mi, puxada pelos ${big}.`];
+   const txt=[`Modelo atual: débitos de ${m(A[0])} mil e créditos de ${m(A[1])} mil resultam em movimentação de ${m(A[3])} mil, integralmente desembolso de caixa.`,
+    `Reforma Tributária: débitos de ${m(T[0])} mil, compensados por créditos de OPEX/SG&A (${m(T[1])} mil) e de CAPEX (${m(T[2])} mil), geram movimentação líquida de ${m(T[3])} mil.`,
+    `Impacto no caixa (por CNPJ): desembolso de ${m(T[4])} mil e restituição de ${m(T[5])} mil. ${T[3]>0?'A movimentação líquida positiva não elimina o desembolso, porque o crédito de uma empresa não paga o débito de outra.':'Créditos de uma empresa não pagam o débito de outra.'}`,
+    `Variação da movimentação: ${m(T[3]-A[3])} mil, puxada pelos ${big}.`];
    ps.forEach((pe,i)=>{if(txt[i])setP(pe,txt[i])})}
 }
 // ---- slides 17-19: comparativos
@@ -153,14 +158,14 @@ function dynFluxEmp(){const tb=tbl('Table 511');if(!tb)return;grow(tb,10);
     put(fmt(a.des));put(fmt(r.des));put(fmt(r.res));put(fmt(r.des-a.des),colS(r.des-a.des))});
   const be=allEls().find(o=>o.t.startsWith('• Modelo atual'));if(!be)return;
   const ps=be.e.querySelectorAll('.pp'),set=(i,t)=>{if(ps[i])setP(ps[i],t)};
-  const m=x=>fmt(x/1000,1),T=rows[rows.length-1];
+  const m=x=>(x<-0.5?'-':'')+fmt(Math.abs(x)),T=rows[rows.length-1];
   const ndes=rows.slice(0,ORS().length).filter(o=>o.r.des<-0.5).length,nres=rows.slice(0,ORS().length).filter(o=>o.r.res>0.5).length;
-  const both=ORS().filter((k,i)=>rows[i].r.des<-0.5&&rows[i].r.res>0.5).map(k=>NAMES[k]);set(0,`Modelo atual: as ${ORS().length} empresas desembolsam juntas ${m(T.a.des)} mi. No RT, o desembolso soma ${m(T.r.des)} mi em ${ndes} empresas e a restituição soma ${m(T.r.res)} mi em ${nres}${both.length?` (${both.join(' e ')} ${both.length>1?'têm':'tem'} os dois ao longo do ano)`:''}. A movimentação líquida de ${m(T.r.mov)} mi esconde essa assimetria entre CNPJs.`);
+  const both=ORS().filter((k,i)=>rows[i].r.des<-0.5&&rows[i].r.res>0.5).map(k=>NAMES[k]);set(0,`Modelo atual: as ${ORS().length} empresas desembolsam juntas ${m(T.a.des)} mil. No RT, o desembolso soma ${m(T.r.des)} mil em ${ndes} empresas e a restituição soma ${m(T.r.res)} mil em ${nres}${both.length?` (${both.join(' e ')} ${both.length>1?'têm':'tem'} os dois ao longo do ano)`:''}. A movimentação líquida de ${m(T.r.mov)} mil esconde essa assimetria entre CNPJs.`);
   const gl=rows.slice(0,ORS().length).map((o,i)=>({i,d:o.r.des-o.a.des}));const gi=gl.slice().sort((a,b)=>a.d-b.d)[0].d<-0.5?gl.slice().sort((a,b)=>a.d-b.d)[0]:gl.slice().sort((a,b)=>Math.abs(b.d)-Math.abs(a.d))[0],go_=rows[gi.i];
-  set(1,`${NAMES[ORS()[gi.i]]} concentra o ${gi.d<0?'aumento':'alívio'} de saída de caixa: o desembolso vai de ${m(go_.a.des)} mi para ${m(go_.r.des)} mi, ${m(Math.abs(gi.d))} mi ${gi.d<0?'a mais':'a menos'}${go_.r.capex>0.5?`, mesmo com ${m(go_.r.capex)} mi de crédito de CAPEX no fluxo de 2027`:''}.`);
+  set(1,`${NAMES[ORS()[gi.i]]} concentra o ${gi.d<0?'aumento':'alívio'} de saída de caixa: o desembolso vai de ${m(go_.a.des)} mil para ${m(go_.r.des)} mil, ${m(Math.abs(gi.d))} mil ${gi.d<0?'a mais':'a menos'}${go_.r.capex>0.5?`, mesmo com ${m(go_.r.capex)} mil de crédito de CAPEX no fluxo de 2027`:''}.`);
   const rs=ORS().map((k,i)=>({k,o:rows[i]})).filter(x=>x.o.r.res>0.5&&x.o.r.des>-0.5);
   const nm=rs.map(x=>NAMES[x.k]);const lst=nm.length>1?nm.slice(0,-1).join(', ')+' e '+nm[nm.length-1]:(nm[0]||'Nenhuma empresa');
-  set(2,rs.length?`${lst} ${rs.length>1?'passam':'passa'} a ter restituição líquida (${m(sum(rs.map(x=>x.o.r.res)))} mi), puxada pelos créditos de CAPEX (${m(sum(rs.map(x=>x.o.r.capex)))} mi). Esse caixa depende do prazo de ressarcimento.`:'Nenhuma empresa fica com restituição líquida. O caixa de créditos depende do prazo de ressarcimento.');
+  set(2,rs.length?`${lst} ${rs.length>1?'passam':'passa'} a ter restituição líquida (${m(sum(rs.map(x=>x.o.r.res)))} mil), puxada pelos créditos de CAPEX (${m(sum(rs.map(x=>x.o.r.capex)))} mil). Esse caixa depende do prazo de ressarcimento.`:'Nenhuma empresa fica com restituição líquida. O caixa de créditos depende do prazo de ressarcimento.');
 }
 // ---- slides 3 e 4: textos que dependem dos parâmetros
 function rep(el,fn){el.querySelectorAll('span').forEach(s=>{const n=fn(s.textContent);if(n!==s.textContent)s.textContent=n})}

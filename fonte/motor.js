@@ -43,7 +43,7 @@ function flow(co,key,P,AUD,F,Pdef){
  const w=(arr)=>{const t=arr?arr.reduce((a,b)=>a+b,0):0;return t?arr.map(v=>v/t):even;};
  const wd=w(F&&F.deb),wo=w(F&&F.opex);
  const cf=(P.cbs[2027]+P.ibsRef[2027]*P.ibsFase[2027])/CBS0;
- const deb=wd.map(x=>x*debA),opex=wo.map(x=>x*opA);const Ey=(P.empresas&&P.empresas[key])||{},c0_=co.credito0,cc=(Ey.credito!==undefined&&Ey.credito!==null)?Ey.credito:c0_,y27=co.years['2027'],regO=(y27&&y27.comp&&y27.comp.OPEX&&y27.comp.OPEX.regC)||0,fcap=(c0_&&regO)?1+regO*(cc/c0_-1):1;const capex=(F&&F.capex?F.capex:Array(12).fill(0)).map(v=>v*cf*fcap);
+ const fxA=r.det.fixed||0,wi=w(F&&F.iibb),deb=wd.map((x,i)=>x*debA+wi[i]*fxA),opex=wo.map(x=>x*opA);const Ey=(P.empresas&&P.empresas[key])||{},c0_=co.credito0,cc=(Ey.credito!==undefined&&Ey.credito!==null)?Ey.credito:c0_,y27=co.years['2027'],regO=(y27&&y27.comp&&y27.comp.OPEX&&y27.comp.OPEX.regC)||0,fcap=(c0_&&regO)?1+regO*(cc/c0_-1):1;const capex=(F&&F.capex?F.capex:Array(12).fill(0)).map(v=>v*cf*fcap);
  const mov=deb.map((v,i)=>v+opex[i]+capex[i]);
  const A=r.atual,aMov=A.DED+(A.CRED||0);
  return {rt:{deb,opex,capex,mov,des:mov.map(v=>Math.min(v,0)),res:mov.map(v=>Math.max(v,0))},
