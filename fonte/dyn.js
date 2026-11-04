@@ -16,7 +16,7 @@ function allEls(){return [...document.querySelectorAll('#cv .sh.hast')].map(e=>(
 // ---- slides de DRE (5 a 14)
 const BL=[138.95,138.95+184.8,138.95+2*184.8,138.95+3*184.8,138.95+4*184.8,138.95+5*184.8],CW=44.36;
 const FLD={'Receita Bruta':'RB','(-) Impostos':'DED','Receita Líquida':'RL','OPEX':'OPEX','Lucro Bruto':'LB','LAIR':'EBT','(-) IR':'IR','Lucro Líquido':'LL','EBITDA':'EBITDA','(+) Créd. Tributários':'CRED'};
-function valDRE(r,lab){const a=r.atual,t=r.rt;if(lab==='Resultado Financeiro')return[a.FIN,t.FIN];if(lab==='EBIT')return[a.EBITDA,t.EBITDA];if(lab.startsWith('↳'))return[a.CT,t.CT];const f=FLD[lab];return[a[f],t[f]]}
+function valDRE(r,lab){const a=r.atual,t=r.rt;if(lab==='Resultado Financeiro')return[a.FIN,t.FIN];if(lab==='EBIT')return[a.EBITX,t.EBITX];if(lab.startsWith('↳'))return[a.CT,t.CT];const f=FLD[lab];return[a[f],t[f]]}
 function arrow(a,t){if(Math.abs(a)<0.5&&Math.abs(t)<0.5)return'= 0%';if(Math.abs(t-a)<1e-6)return'= 0%';if(Math.abs(a)<0.5)return t>0?'▲ novo':'▼ novo';const v=(t-a)/Math.abs(a);const s=Math.round(Math.abs(v)*100)+'%';return(v>0?'▲ ':'▼ ')+s}
 const fz=(v,dd)=>Math.abs(v)<0.5*Math.pow(10,-dd)?'0':fmt(v,dd);
 function dynDRE(si){
@@ -33,7 +33,7 @@ function dynDRE(si){
         if(ci===0)setTxt(o.e,fz(a,d));else if(ci===1)setTxt(o.e,fz(t,d));
         else if(ci===2)setTxt(o.e,fz(dl,d),dl<-1e-9?RED:dl>1e-9?GRN:null);
         else setTxt(o.e,Math.abs(a)<1e-9?'–':p1(dl/Math.abs(a)),dl<-1e-9?RED:dl>1e-9?GRN:null);return}
-      const base={'Lucro Bruto':'LB','EBITDA':'EBITDA','Lucro Líquido':'LL','EBIT':'EBITDA','LAIR':'EBT'}[lab];if(!base)return;
+      const base={'Lucro Bruto':'LB','EBITDA':'EBITDA','Lucro Líquido':'LL','EBIT':'EBITX','LAIR':'EBT'}[lab];if(!base)return;
       const ma=r.atual.RL?r.atual[base]/r.atual.RL:0,mt=r.rt.RL?r.rt[base]/r.rt.RL:0;
       if(ci===0)setTxt(o.e,p1(ma));else if(ci===1)setTxt(o.e,p1(mt));else if(ci===2)setTxt(o.e,pp(mt-ma),mt-ma>=0?GRN:RED);return}
   });

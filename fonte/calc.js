@@ -11,7 +11,7 @@ const pcs=v=>pc(v);const pp=v=>{v=Math.round(v*1000)/10;if(v===0)v=0;return v.to
 const cls=v=>v>1e-9?'pos':v<-1e-9?'neg':'';
 // ---- dados por empresa/ano
 function CY(k,y){const key=k+y;if(cache[key]!==undefined)return cache[key];const r=compute(B.empresas[k],k,y,P,B.audit);
- if(r){const cr=r.rt.OPEX-r.atual.OPEX;r.atual.CT=r.atual.CRED||0;r.rt.CT=cr;}
+ if(r){const cr=r.rt.OPEX-r.atual.OPEX;r.atual.CT=r.atual.CRED||0;r.rt.CT=cr;const eb=k==='lote6'?'EBIT':'EBITDA';r.atual.EBITX=r.atual[eb];r.rt.EBITX=r.rt[eb];}
  return cache[key]=r;}
 function keysV(){return ORDER.filter(k=>L6||k!=='lote6')}
 function CONS(y){const ks=keysV();let A=null,R=null,n=0;ks.forEach(k=>{const r=CY(k,y);if(!r)return;n++;if(!A){A={};R={};for(const f in r.atual){A[f]=0;R[f]=0}}for(const f in r.atual){A[f]+=r.atual[f];R[f]+=r.rt[f]}});return A?{atual:A,rt:R,n}:null}

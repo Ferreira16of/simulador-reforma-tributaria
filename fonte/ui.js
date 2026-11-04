@@ -48,16 +48,17 @@ let CUR=0;let SL=SLIDES.slice();let BASE=null;
 function fit(){const t=$('stage').getBoundingClientRect();const s=Math.min((t.width-(innerWidth<700?8:32))/1280,(t.height-(innerWidth<700?8:20))/720);$('cv').style.transform='scale('+s+')';$('box').style.width=(1280*s)+'px';$('box').style.height=(720*s)+'px'}
 function mkS20(){if(SL.length>=20){BASE=SL.slice(0,20);return}const b=JSON.parse(JSON.stringify(SL[18]));b.i=20;b.el=b.el.filter(e=>e.slnum&&!e.p||e.slnum);b.el=b.el.filter(e=>e.slnum);const f=SL[18].lay.concat([]);SL.push({i:20,bg:SL[18].bg,lay:SL[18].lay,el:SL[18].el.filter(e=>e.slnum)});BASE=SL.slice()}
 function mkL6(){const b=JSON.parse(JSON.stringify(BASE[12]));b.i=21;b.el.forEach(e=>{if(e.p)e.p.forEach(p=>p.runs.forEach(r=>{r.t=r.t.replace('ROTA DA INTEGRAÇÃO','LOTE 6')}))});return b}
-function mkSL(){SL=BASE.slice();if(L6)SL.push(mkL6())}
+function mkSL(){SL=BASE.slice();if(L6){const ci=SL.findIndex(s=>s.i===14);SL.splice(ci<0?SL.length:ci,0,mkL6())}}
 function fxText(){const FX=[['Fonte: planilha Aliquotas_Fluxo (aba Fluxo) e DF - Mensal das empresas, 2027.','Fonte: DF - Mensal 2027 de cada empresa (planilhas de origem), recalculada com as premissas da simulação.'],['Créditos de CAPEX conforme a planilha (zerados no fluxo mensal de Grãos do Piauí, MCP01 e Rota da Integração).','Créditos de CAPEX conforme a DF - Mensal de cada empresa (planilhas de origem).'],['RT: aba Fluxo 2027,','RT: fluxo 2027 (DF - Mensal),'],['RT: planilha Fluxo 2027,','RT: fluxo 2027 (DF - Mensal),']];
  document.querySelectorAll('#cv span').forEach(s=>{let t=s.textContent,r=t;FX.forEach(([a,b])=>{if(r.includes(a))r=r.replace(a,b)});if(r!==t)s.textContent=r})}
 function render(){inv();live();const S=SL[CUR];$('cv').innerHTML=slideHtml(S);$('cv').style.background=S.bg;$('box').style.background=S.bg;
- document.querySelectorAll('#cv .snv').forEach(e=>e.textContent=S.i);
+ document.querySelectorAll('#cv .snv').forEach(e=>e.textContent=CUR+1);
  dynamic(S.i);
  if(L6&&S.i>=17&&S.i<=19){const bx=[...document.querySelectorAll('#cv .sh.hast')].find(e=>e.textContent.trim().startsWith('• '));if(bx)bx.style.top=(parseFloat(bx.style.top)+24)+'px'}
  if(S.i===21){document.querySelectorAll('#cv .sh.hast').forEach(e=>{if(e.textContent.trim().startsWith('Considerações'))e.style.display='none'});document.querySelectorAll('#cv table.tb').forEach(t=>{if(parseFloat(t.style.top)>570)t.style.display='none'})}
  if(L6&&S.i!==17)document.querySelectorAll('#cv span').forEach(s=>{if(s.textContent.includes('9 empresas'))s.textContent=s.textContent.replace(/\b9 empresas/g,'10 empresas')});
  if(L6)document.querySelectorAll('#cv span').forEach(s=>{if(s.textContent.includes('slides 5 a 13'))s.textContent=s.textContent.replace('slides 5 a 13','slides 5 a 14')});
+ if(L6)document.querySelectorAll('#cv span').forEach(s=>{if(s.textContent.includes('o slide 16'))s.textContent=s.textContent.replace('o slide 16','o slide 17')});
  fxText();
  if(S.i===2)wireIdx();
  $('pos').textContent=(CUR+1)+' / '+SL.length;$('prev').disabled=CUR===0;$('next').disabled=CUR===SL.length-1;fit();try{history.replaceState(null,'','#'+(CUR+1))}catch(e){}}
@@ -67,7 +68,14 @@ function go(i){CUR=Math.max(0,Math.min(SL.length-1,i));render()}
 function addIdx20(){const all=[...document.querySelectorAll('#cv .sh')];const num=n=>all.find(e=>e.textContent.trim()===n&&e.classList.contains('hast'));
  const a=num('18'),b=num('19');if(!a||!b)return;const ta=parseFloat(a.style.top),tb=parseFloat(b.style.top),st=tb-ta;
  all.filter(e=>Math.abs(parseFloat(e.style.top)-tb)<1.5&&Math.abs(parseFloat(e.style.left)-parseFloat(b.style.left))<400).forEach(e=>{const c=e.cloneNode(true);c.style.top=(parseFloat(e.style.top)+st)+'px';
-  c.querySelectorAll('span').forEach(sp=>{if(sp.textContent.trim()==='19')sp.textContent='20';else if(sp.textContent.trim().startsWith('Fluxo 2027 por empresa'))sp.textContent='Redutor | linhas consideradas por empresa'});e.parentNode.appendChild(c)});if(L6){const all2=[...document.querySelectorAll('#cv .sh')];const n20=all2.find(e=>e.textContent.trim()==='20'&&e.classList.contains('hast'));if(n20){const st2=tb-ta;all2.filter(e=>Math.abs(parseFloat(e.style.top)-parseFloat(n20.style.top))<1.5&&Math.abs(parseFloat(e.style.left)-parseFloat(n20.style.left))<400).forEach(e=>{const c=e.cloneNode(true);c.style.top=(parseFloat(e.style.top)+st2)+'px';c.querySelectorAll('span').forEach(sp=>{if(sp.textContent.trim()==='20')sp.textContent='21';else if(sp.textContent.trim().startsWith('Redutor'))sp.textContent='Lote 6 | DRE Atual × RT (opcional)'});e.parentNode.appendChild(c)})}}}
+  c.querySelectorAll('span').forEach(sp=>{if(sp.textContent.trim()==='19')sp.textContent='20';else if(sp.textContent.trim().startsWith('Fluxo 2027 por empresa'))sp.textContent='Redutor | linhas consideradas por empresa'});e.parentNode.appendChild(c)});if(L6){const all2=[...document.querySelectorAll('#cv .sh')].filter(e=>e.classList.contains('hast'));
+  const nm=n=>all2.filter(e=>e.textContent.trim()===n&&parseFloat(e.style.left)<100||false);
+  const n12=all2.find(e=>e.textContent.trim()==='12'&&parseFloat(e.style.left)<100),n13=all2.find(e=>e.textContent.trim()==='13'&&parseFloat(e.style.left)<100);
+  if(n12&&n13){const st3=parseFloat(n13.style.top)-parseFloat(n12.style.top),T13=parseFloat(n13.style.top);
+   // renumera a coluna da direita (14..20 -> 15..21) antes de criar a nova linha
+   all2.filter(e=>parseFloat(e.style.left)>600&&/^(1[4-9]|20)$/.test(e.textContent.trim())).forEach(e=>e.querySelectorAll('span').forEach(sp=>{const t=sp.textContent.trim();if(/^(1[4-9]|20)$/.test(t))sp.textContent=String(+t+1)}));
+   [...document.querySelectorAll('#cv .sh')].filter(e=>Math.abs(parseFloat(e.style.top)-T13)<8&&parseFloat(e.style.left)<660&&!/^[A-E]$/.test(e.textContent.trim())).forEach(e=>{const c=e.cloneNode(true);c.style.top=(T13+st3)+'px';
+    c.querySelectorAll('span').forEach(sp=>{const t=sp.textContent.trim();if(t==='13')sp.textContent='14';else if(t.startsWith('Rota'))sp.textContent='Lote 6'});e.parentNode.appendChild(c)})}}}
 function wireIdx(){addIdx20();document.querySelectorAll('#cv span').forEach(sp=>{if(sp.textContent.includes('Clique no número'))sp.textContent=sp.textContent.replace('Clique no número','Clique na linha')});/* índice (slide 2): a linha inteira (número, título e caixa) é clicável */
  const all=[...document.querySelectorAll('#cv .sh')];
  all.forEach(e=>{if(!e.classList.contains('hast'))return;const m=e.textContent.trim().match(/^(\d{2})$/);if(!m||+m[1]<3||+m[1]>21)return;
