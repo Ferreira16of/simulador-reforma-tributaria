@@ -3,7 +3,7 @@ const B=/*BASES*/;const F=/*FLOW*/;
 /*MOTOR*/
 const ORDER=['graos','mobi','leste','mercosul','norte','sul','mcp01','welfare','rota','lote6'];
 const NAMES={};ORDER.forEach(k=>NAMES[k]=B.empresas[k].nome);
-const DEF=()=>{const p=defaultParams();YEARS.forEach(y=>{p.cbs[y]=0.113468;p.ibsRef[y]=0.28-0.113468;p.redutor[y]=0.442});return p};let P=DEF(),L6=false;const D=DEF();
+const DEF=()=>simDefaults(B);let P=DEF(),L6=false;const D=DEF();
 let cache={};const inv=()=>{cache={}};
 const fmt=(v,d=0)=>{if(Math.abs(v)<0.5*Math.pow(10,-d))v=0;const s=Math.abs(v).toLocaleString('pt-BR',{minimumFractionDigits:d,maximumFractionDigits:d});return v<0?'('+s+')':s};
 const pc=(v,d=1)=>{v=Math.round(v*100*Math.pow(10,d))/Math.pow(10,d);if(v===0)v=0;return v.toLocaleString('pt-BR',{minimumFractionDigits:d,maximumFractionDigits:d})+'%'};

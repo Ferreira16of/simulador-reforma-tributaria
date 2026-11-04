@@ -171,8 +171,11 @@ function dynS3(){const p2=v=>rate(v).replace('%','');
     if(o.t.includes('modelo: CBS'))rep(o.e,s=>s.replace(/modelo: CBS .*$/,`modelo: CBS ${rate(P.cbs[2027])}`+(Math.abs(P.cbs[2027]-P.cbs[2028])>1e-9?` / ${rate(P.cbs[2028])}`:'')));
     if(o.t.includes('Modelo 2029–31'))rep(o.e,s=>s.startsWith('Modelo')?`Modelo 2029–31: IBS ${il} e ISS ${sl}`:s);
     if(o.t.includes('No modelo: CBS de'))rep(o.e,s=>s.replace(/CBS de [\d,]+%/,`CBS de ${rate(P.cbs[2027])}`));
+    if(o.t.includes('matriz de custeio')||o.t.includes('Crédito sobre')){const cr=ORDER.map(k=>{const E=P.empresas[k]||{};return E.credito!=null?E.credito:B.empresas[k].credito0}),lo=Math.min(...cr),hi=Math.max(...cr),g=x=>(x*100).toLocaleString('pt-BR',{maximumFractionDigits:1});
+      rep(o.e,s=>s.replace(/^15% da matriz de custeio.*$/,`a parcela das compras de fornecedores do Simples Nacional não gera crédito; o % no Regime Normal vem da planilha Regime Tributário (Assertif), por empresa (de ${g(lo)}% a ${g(hi)}%, ver slide 4).`).replace(/Crédito sobre 85% dos custos e despesas elegíveis \(regime normal\)\./,`Crédito sobre ${g(lo)}% a ${g(hi)}% dos custos e despesas elegíveis, conforme o Regime Normal de cada empresa.`))}
   })}
 function dynS4(){
+  allEls().forEach(o=>{if(o.t.startsWith('Fonte: planilha Aliquotas_Fluxo'))rep(o.e,s=>s.replace('(aba Premissas).','(aba Premissas); % de crédito (Regime Normal) da planilha Regime Tributário (Assertif).'))});
   allEls().forEach(o=>{if(!o.t.includes('IR/CS'))return;const bx=o.e;
     // descobre a empresa pelo título da caixa acima (mesmo x, y-39)
     const ti=allEls().find(q=>Math.abs(q.x-o.x)<1&&Math.abs(q.y-(o.y-39))<3);if(!ti)return;
