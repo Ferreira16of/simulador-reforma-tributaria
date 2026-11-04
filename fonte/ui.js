@@ -49,12 +49,16 @@ function fit(){const t=$('stage').getBoundingClientRect();const s=Math.min((t.wi
 function mkS20(){if(SL.length>=20){BASE=SL.slice(0,20);return}const b=JSON.parse(JSON.stringify(SL[18]));b.i=20;b.el=b.el.filter(e=>e.slnum&&!e.p||e.slnum);b.el=b.el.filter(e=>e.slnum);const f=SL[18].lay.concat([]);SL.push({i:20,bg:SL[18].bg,lay:SL[18].lay,el:SL[18].el.filter(e=>e.slnum)});BASE=SL.slice()}
 function mkL6(){const b=JSON.parse(JSON.stringify(BASE[12]));b.i=21;b.el.forEach(e=>{if(e.p)e.p.forEach(p=>p.runs.forEach(r=>{r.t=r.t.replace('ROTA DA INTEGRAÇÃO','LOTE 6')}))});return b}
 function mkSL(){SL=BASE.slice();if(L6)SL.push(mkL6())}
+function fxText(){const FX=[['Fonte: planilha Aliquotas_Fluxo (aba Fluxo) e DF - Mensal das empresas, 2027.','Fonte: DF - Mensal 2027 de cada empresa (planilhas de origem), recalculada com as premissas da simulação.'],['Créditos de CAPEX conforme a planilha (zerados no fluxo mensal de Grãos do Piauí, MCP01 e Rota da Integração).','Créditos de CAPEX conforme a DF - Mensal de cada empresa (planilhas de origem).'],['RT: aba Fluxo 2027,','RT: fluxo 2027 (DF - Mensal),'],['RT: planilha Fluxo 2027,','RT: fluxo 2027 (DF - Mensal),']];
+ document.querySelectorAll('#cv span').forEach(s=>{let t=s.textContent,r=t;FX.forEach(([a,b])=>{if(r.includes(a))r=r.replace(a,b)});if(r!==t)s.textContent=r})}
 function render(){inv();live();const S=SL[CUR];$('cv').innerHTML=slideHtml(S);$('cv').style.background=S.bg;$('box').style.background=S.bg;
  document.querySelectorAll('#cv .snv').forEach(e=>e.textContent=S.i);
  dynamic(S.i);
  if(L6&&S.i>=17&&S.i<=19){const bx=[...document.querySelectorAll('#cv .sh.hast')].find(e=>e.textContent.trim().startsWith('• '));if(bx)bx.style.top=(parseFloat(bx.style.top)+24)+'px'}
  if(S.i===21){document.querySelectorAll('#cv .sh.hast').forEach(e=>{if(e.textContent.trim().startsWith('Considerações'))e.style.display='none'});document.querySelectorAll('#cv table.tb').forEach(t=>{if(parseFloat(t.style.top)>570)t.style.display='none'})}
- if(L6)document.querySelectorAll('#cv span').forEach(s=>{if(s.textContent.includes('9 empresas'))s.textContent=s.textContent.replace(/\b9 empresas/g,'10 empresas')});
+ if(L6&&S.i!==17)document.querySelectorAll('#cv span').forEach(s=>{if(s.textContent.includes('9 empresas'))s.textContent=s.textContent.replace(/\b9 empresas/g,'10 empresas')});
+ if(L6)document.querySelectorAll('#cv span').forEach(s=>{if(s.textContent.includes('slides 5 a 13'))s.textContent=s.textContent.replace('slides 5 a 13','slides 5 a 14')});
+ fxText();
  if(S.i===2)wireIdx();
  $('pos').textContent=(CUR+1)+' / '+SL.length;$('prev').disabled=CUR===0;$('next').disabled=CUR===SL.length-1;fit();try{history.replaceState(null,'','#'+(CUR+1))}catch(e){}}
 function live(){const el=$('live');if(!el)return;try{const row=y=>{const c=CONS(y);if(!c)return '';const d=c.rt.LL-c.atual.LL,db=(c.rt.RB-c.atual.RB);return `<tr><td>${y}</td><td>${fmt(c.atual.LL)}</td><td>${fmt(c.rt.LL)}</td><td class="${cls(d)}">${fmt(d)}</td><td class="${cls(db)}">${fmt(db)}</td></tr>`};

@@ -65,7 +65,7 @@ function dynFlux(){const f=FLC(),r=f.rt;const tb=tbl('Table 516');if(!tb)return;
   rowsK.forEach(([k,ri])=>{r[k].forEach((v,m)=>cell(tb,ri,1+m,fmt(v)));cell(tb,ri,13,fmt(sum(r[k])))});
   const t2=tbl('Table 517');
   ORS().forEach((k,i)=>{cell(t2,1+i,0,NAMES[k]);const x=FL(k).rt;['deb','opex','capex','mov','des','res'].forEach((c,j)=>cell(t2,1+i,1+j,fmt(sum(x[c]))))});
-  ['deb','opex','capex','mov','des','res'].forEach((c,j)=>cell(t2,10,1+j,fmt(sum(r[c]))));
+  ['deb','opex','capex','mov','des','res'].forEach((c,j)=>cell(t2,1+ORS().length,1+j,fmt(sum(r[c]))));
   const ch=document.querySelector('#cv .chart[data-n="Chart 514"]');
   if(ch)ch.innerHTML=chartBars(ch,{title:'Movimentação mensal consolidada (R$ mil)',cats:MESES,series:[{name:'RT',v:r.mov,color:'#2F75B5'}],fmtv:v=>fmt(v)});
 }
@@ -124,10 +124,10 @@ function dynCmp(si){
   const ps=be.e.querySelectorAll('.pp'),set=(i,t)=>{if(ps[i])setP(ps[i],t)};
   const dLL=T.rt.LL-T.atual.LL,dE=T.rt.EBITDA-T.atual.EBITDA;
   const rk=ORS().map(k=>({k,d:CY(k,y)?CY(k,y).rt.LL-CY(k,y).atual.LL:0})).sort((a,b)=>a.d-b.d);
-  const l2=rk.slice(0,2),s2=l2[0].d+l2[1].d,cbs=rate(P.cbs[y]);
-  const qtd=ORS().filter(k=>CY(k,y)).length;
+  const nl=(y===2027&&L6)?3:2,l2=rk.slice(0,nl),s2=l2.reduce((a,o)=>a+o.d,0),cbs=rate(P.cbs[y]);const nw=nl===3?'três':'duas';
+  const qtd=ORS().filter(k=>CY(k,y)).length;const x6=f=>sum(ORS().filter(k=>k!=='lote6'&&CY(k,y)).map(k=>CY(k,y).rt[f]-CY(k,y).atual[f]));
   const ct0=T.atual.CT,ct1=T.rt.CT;
-  set(0,`Em ${y}, o lucro líquido somado ${y===2026?'das 9 empresas ':''}${dLL<0?'cai':'sobe'} ${aabs(dLL)} mil (${p1(dLL/Math.abs(T.atual.LL))}) no RT, e o EBITDA ${dE<0?'cai':'sobe'} ${aabs(dE)} mil (${p1(dE/Math.abs(T.atual.EBITDA))}).${y===2027?' É o primeiro ano com a CBS plena e o PIS/COFINS extinto.':''}`);
+  set(0,`Em ${y}, o lucro líquido somado ${y===2026?'das 9 empresas ':''}${dLL<0?'cai':'sobe'} ${aabs(dLL)} mil (${p1(dLL/Math.abs(T.atual.LL))}) no RT, e o EBITDA ${dE<0?'cai':'sobe'} ${aabs(dE)} mil (${p1(dE/Math.abs(T.atual.EBITDA))}).${y===2027&&L6?` Sem a Lote 6 as quedas eram de ${aabs(x6('LL'))} mil e ${aabs(x6('EBITDA'))} mil.`:''}${y===2027?' É o primeiro ano com a CBS plena e o PIS/COFINS extinto.':''}`);
   if(y===2026){
     set(1,`${NAMES[l2[0].k]} e ${NAMES[l2[1].k]} ${s2<0?'perdem':'variam'} ${aabs(s2)} mil${s2<dLL?', mais que a perda total':''}: ${l2.every(o=>['graos','rota'].includes(o.k))?`as duas saem do PIS/COFINS cumulativo (3,65%) para CBS de ${cbs}`:'maior pressão da carga tributária no RT'}.`);
     set(2,`O crédito tributário ${ct1>=ct0?'sobe':'cai'} de ${aabs(ct0)} mil para ${aabs(ct1)} mil (${arrow(ct0,ct1)}), mas não compensa a alíquota maior nessas duas operações.`);
@@ -136,8 +136,9 @@ function dynCmp(si){
   }else{
     const dRB=T.rt.RB-T.atual.RB,dRL=T.rt.RL-T.atual.RL;
     set(1,`A receita bruta ${dRB<0?'cai':'sobe'} ${aabs(dRB)} mil (${p1(dRB/Math.abs(T.atual.RB))}), mas a receita líquida ${dRL<0?'cai':'sobe'} só ${aabs(dRL)} mil (${p1(dRL/Math.abs(T.atual.RL))}): a maior parte da queda na receita bruta é a CBS saindo do preço ("por fora").`);
-    set(2,`${NAMES[l2[0].k]} (–${aabs(l2[0].d)} mil) e ${NAMES[l2[1].k]} (–${aabs(l2[1].d)} mil) perdem juntas ${aabs(s2)} mil${s2<dLL?', mais que a perda total':''}: ${l2.every(o=>['graos','rota'].includes(o.k))?`as duas saem do PIS/COFINS cumulativo (3,65%) para CBS de ${cbs}.`:'maior pressão da carga tributária no RT.'}`);
-    set(3,`O crédito tributário ${ct1>=ct0?'sobe':'cai'} de ${aabs(ct0)} mil para ${aabs(ct1)} mil (${arrow(ct0,ct1)}), inclusive em Grãos e Rota, que hoje não têm crédito; ainda assim, o ganho não compensa o aumento de alíquota nessas duas operações.`);
+    const lst=l2.slice(0,-1).map(o=>`${NAMES[o.k]} (–${aabs(o.d)} mil)`).join(', ')+` e ${NAMES[l2[nl-1].k]} (–${aabs(l2[nl-1].d)} mil)`;
+    set(2,`${lst} perdem juntas ${aabs(s2)} mil${s2<dLL?', mais que a perda total':''}: ${l2.every(o=>['graos','rota','lote6'].includes(o.k))?`as ${nw} saem do PIS/COFINS cumulativo (3,65%) para CBS de ${cbs}.`:'maior pressão da carga tributária no RT.'}`);
+    set(3,`O crédito tributário ${ct1>=ct0?'sobe':'cai'} de ${aabs(ct0)} mil para ${aabs(ct1)} mil (${arrow(ct0,ct1)}), inclusive em Grãos${L6?', Rota e Lote 6':' e Rota'}, que hoje não têm crédito; ainda assim, o ganho não compensa o aumento de alíquota nessas ${nw} operações.`);
   }
 }
 function dynFluxEmp(){const tb=tbl('Table 511');if(!tb)return;grow(tb,10);
@@ -153,8 +154,8 @@ function dynFluxEmp(){const tb=tbl('Table 511');if(!tb)return;grow(tb,10);
   const be=allEls().find(o=>o.t.startsWith('• Modelo atual'));if(!be)return;
   const ps=be.e.querySelectorAll('.pp'),set=(i,t)=>{if(ps[i])setP(ps[i],t)};
   const m=x=>fmt(x/1000,1),T=rows[rows.length-1];
-  const ndes=rows.slice(0,9).filter(o=>o.r.des<-0.5).length,nres=rows.slice(0,9).filter(o=>o.r.res>0.5).length;
-  const both=ORS().filter((k,i)=>rows[i].r.des<-0.5&&rows[i].r.res>0.5).map(k=>NAMES[k]);set(0,`Modelo atual: as 9 empresas desembolsam juntas ${m(T.a.des)} mi. No RT, o desembolso soma ${m(T.r.des)} mi em ${ndes} empresas e a restituição soma ${m(T.r.res)} mi em ${nres}${both.length?` (${both.join(' e ')} ${both.length>1?'têm':'tem'} os dois ao longo do ano)`:''}. A movimentação líquida de ${m(T.r.mov)} mi esconde essa assimetria entre CNPJs.`);
+  const ndes=rows.slice(0,ORS().length).filter(o=>o.r.des<-0.5).length,nres=rows.slice(0,ORS().length).filter(o=>o.r.res>0.5).length;
+  const both=ORS().filter((k,i)=>rows[i].r.des<-0.5&&rows[i].r.res>0.5).map(k=>NAMES[k]);set(0,`Modelo atual: as ${ORS().length} empresas desembolsam juntas ${m(T.a.des)} mi. No RT, o desembolso soma ${m(T.r.des)} mi em ${ndes} empresas e a restituição soma ${m(T.r.res)} mi em ${nres}${both.length?` (${both.join(' e ')} ${both.length>1?'têm':'tem'} os dois ao longo do ano)`:''}. A movimentação líquida de ${m(T.r.mov)} mi esconde essa assimetria entre CNPJs.`);
   const gl=rows.slice(0,ORS().length).map((o,i)=>({i,d:o.r.des-o.a.des}));const gi=gl.slice().sort((a,b)=>a.d-b.d)[0].d<-0.5?gl.slice().sort((a,b)=>a.d-b.d)[0]:gl.slice().sort((a,b)=>Math.abs(b.d)-Math.abs(a.d))[0],go_=rows[gi.i];
   set(1,`${NAMES[ORS()[gi.i]]} concentra o ${gi.d<0?'aumento':'alívio'} de saída de caixa: o desembolso vai de ${m(go_.a.des)} mi para ${m(go_.r.des)} mi, ${m(Math.abs(gi.d))} mi ${gi.d<0?'a mais':'a menos'}${go_.r.capex>0.5?`, mesmo com ${m(go_.r.capex)} mi de crédito de CAPEX no fluxo de 2027`:''}.`);
   const rs=ORS().map((k,i)=>({k,o:rows[i]})).filter(x=>x.o.r.res>0.5&&x.o.r.des>-0.5);
