@@ -26,13 +26,13 @@ function rodapeDeb(k){
   const fe=allEls().find(o=>o.e.dataset.fe||o.t.startsWith('Fonte: planilhas das empresas'));if(!fe)return;fe.e.dataset.fe=1;
   const R=B.empresas[k].years[2027].comp.RB,cp=R.shareCP||0,lo=R.shareLoc||0,fu=Math.max(0,1-cp-lo),full=P.cbs[2027];
   const rd=(P.redutor[2027]||0),rl=(P.redutorLoc[2027]||0),r2=v=>(v*100).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+'%';
-  const t=RDP[k],ln=[];
-  if(fu>0.0005)ln.push([t.f,rate(full)]);
-  if(cp>0.0005)ln.push([t.c,r2(full*(1-rd))]);
-  if(lo>0.0005)ln.push([t.l,r2(full*(1-rl))]);
+  const t=RDP[k],ln=[],den=-R.cbs/0.0925,vf=den*fu,vc=den*cp,vl=den*lo,mv=v=>' (R$ '+fmt(v,0)+' mil)';
+  if(fu>0.0005)ln.push([t.f+mv(vf),rate(full)]);
+  if(cp>0.0005)ln.push([t.c+mv(vc),r2(full*(1-rd))]);
+  if(lo>0.0005)ln.push([t.l+mv(vl),r2(full*(1-rl))]);
   const tx=ln.map((a,i)=>(i===0?'Débito 2027: ':'')+a[0]+'. Utilizada a alíquota de '+a[1]);
   const pps=[...fe.e.querySelectorAll('.pp')];while(pps.length<tx.length){const c=pps[0].cloneNode(true);pps[pps.length-1].after(c);pps.push(c)}
-  pps.forEach((pe,i)=>{if(i<tx.length)setP(pe,tx[i]);else pe.remove()});
+  pps.forEach((pe,i)=>{if(i<tx.length){setP(pe,tx[i]);pe.style.textAlign='left'}else pe.remove()});
 }
 function dynDRE(si){
   const cons=si===14,k=cons?null:(si===21?'lote6':OR9[si-5]),d=0,sc=1;
