@@ -10,7 +10,7 @@ Nas abas das empresas, a seção "6. DADOS DE ORIGEM (DF)" tem valores digitados
   1. guarda esses valores originais na seção "7. BASE ORIGINAL" (linhas 138-147; preservada em novas execuções);
   2. troca as linhas de CBS/IBS (débitos e créditos) por fórmulas = base original x fatores da aba Premissas;
   3. monta em Premissas as tabelas: alíquotas/redutores por ano, % contraprestação, % locação e crédito por empresa.
-Uso: python3 atualizar_creditos_simulacao.py <2.Creditos.xlsx> <saida.xlsx> [bases.json]
+Uso: python3 atualizar_creditos_simulacao.py <2.Creditos.xlsx> <saida.xlsx> [bases.json] [pasta_das_DFs]
 """
 import sys, os, json, copy
 import openpyxl
@@ -34,7 +34,30 @@ YEL = PatternFill('solid', fgColor='FFF2CC')
 B = Font(bold=True)
 
 
-def main(src, out, bases):
+def mobi_cbs_mensal_2027(pasta):
+    """CBS mensal de 2027 da CS Mobi, lido da DF - Mensal: 9,25% x (base tributada do mês).
+    A DF (5800 - CS Mobi) tributa a Contraprestação Pecuniária (líquida do Desconto IFRS 09) + receitas acessórias/locação/publicidade/naming.
+    Se a DF voltar a tributar a Contratual (bruta), a soma mensal deixa de bater com o CBS anual e a função devolve None (não altera a planilha)."""
+    import datetime, re, glob
+    f = [x for x in glob.glob(os.path.join(pasta, '5800*Mobi*.xlsx')) if not os.path.basename(x).startswith('~')]
+    if not f: return None
+    wbv = openpyxl.load_workbook(f[0], read_only=True, data_only=True)
+    ws = wbv[wbv.sheetnames[1]]
+    rows = list(ws.iter_rows(min_row=1, max_row=60, max_col=200, values_only=True))
+    cols = [j for j, v in enumerate(rows[5]) if isinstance(v, datetime.datetime) and v.year == 2027]
+    lab = {}
+    for i, r in enumerate(rows):
+        if isinstance(r[1], str): lab.setdefault(re.sub(r'\s+', ' ', r[1]).strip(), i)
+    need = ['Contraprestação Contratual', 'Contraprestação Pecuniária', 'Rec. Acessórias - Locação', 'Rec. Acessórias - Publicidade - Outdoor',
+            'Rec. Acessórias - Publicidade - Mercado', 'Naming Rights']
+    if len(cols) != 12 or any(n not in lab for n in need): return None
+    v = {n: [(rows[lab[n]][j] or 0) for j in cols] for n in need}
+    acc = [sum(v[n][i] for n in need[2:]) for i in range(12)]
+    return {'pec': [-0.0925 * (v['Contraprestação Pecuniária'][i] + acc[i]) for i in range(12)],
+            'con': [-0.0925 * (v['Contraprestação Contratual'][i] + acc[i]) for i in range(12)]}
+
+
+def main(src, out, bases, pasta_df=None):
     wb = openpyxl.load_workbook(src)
     B_ = json.load(open(bases, encoding='utf8'))['empresas']
 
@@ -62,6 +85,20 @@ def main(src, out, bases):
             if ISS_PH[y] > 0 and abs(iss_dep - v114) > 1:
                 print('  [DF] %s %d: ISS Depois %.1f -> %.1f' % (aba, y, v114, iss_dep))
                 ws_.cell(114, col).value = iss_dep
+    # --- CS Mobi 2027: CBS mensal da origem conforme a DF atual (base tributada = Pecuniária ou Contratual, o que bater com o CBS anual de bases.json) ---
+    if pasta_df and 'CS MOBI' in wb.sheetnames and 'mobi' in B_:
+        m = mobi_cbs_mensal_2027(pasta_df)
+        cbs_anual = ((B_['mobi']['years'].get('2027') or {}).get('comp', {}).get('RB') or {}).get('cbs')
+        if m and cbs_anual is not None:
+            ok = [k for k in ('pec', 'con') if abs(sum(m[k]) - cbs_anual) < 1.0]
+            if ok:
+                wsm = wb['CS MOBI']
+                for i, c in enumerate(range(3, 15)):
+                    old = wsm.cell(112, c).value
+                    if isinstance(old, (int, float)): wsm.cell(112, c).value = m[ok[0]][i]
+                print('  [DF] CS MOBI 2027: CBS mensal (linha 112) recalculado pela DF (%s): %.1f' % (ok[0], sum(m[ok[0]])))
+            else:
+                print('  [ATENÇÃO] CS MOBI 2027: soma mensal da DF não bate com o CBS anual (%.1f); linha 112 mantida' % cbs_anual)
     pr = wb['Premissas']
     pr['B8'] = 'Alíquotas da simulação (CBS, IBS e redutores) — aplicadas às abas das empresas'; pr['B8'].font = B
     pr['B9'] = 'Ano'; pr['B9'].font = B
@@ -171,4 +208,4 @@ def main(src, out, bases):
 
 
 if __name__ == '__main__':
-    main(sys.argv[1], sys.argv[2], sys.argv[3] if len(sys.argv) > 3 else os.path.join(os.path.dirname(os.path.abspath(__file__)), 'simulador', 'bases.json'))
+    main(sys.argv[1], sys.argv[2], sys.argv[3] if len(sys.argv) > 3 else os.path.join(os.path.dirname(os.path.abspath(__file__)), 'simulador', 'bases.json'), sys.argv[4] if len(sys.argv) > 4 else None)

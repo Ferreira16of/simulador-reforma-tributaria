@@ -11,7 +11,7 @@ Grava em empresas[k].years[ano].comp.RB: cpValor/shareCP (44,2%) e locValor/shar
 Uso: python3 atualizar_reducao_bases.py <pasta_das_planilhas> <bases.json>
 """
 import sys,os,re,json,openpyxl
-CP={'graos':['Receita Contraprestação'],'mobi':['Contraprestação Contratual'],'leste':['Contraprestação OPEX','Receita Financeira IFRS 09'],
+CP={'graos':['Receita Contraprestação'],'mobi':['Contraprestação Contratual','Contraprestação Pecuniária'],'leste':['Contraprestação OPEX','Receita Financeira IFRS 09'],
     'norte':['Receita de Operação - Contábil'],'sul':['Receita de Operação - Contábil'],'mcp01':['Receita Bruta']}
 LOC={'graos':['Receita Acessória'],
      'mobi':['Rec. Acessórias - Locação','Rec. Acessórias - Publicidade - Outdoor','Rec. Acessórias - Publicidade - Mercado','Naming Rights'],
@@ -54,6 +54,9 @@ def main(pasta,bp):
             y=int(ys)
             den=(-rb['cbs']/0.0925) if rb.get('cbs') else (rb['sem'] or 0)
             cp=sum(L.get(l,{}).get(y,0) for l in CP.get(k,[])); lo=sum(L.get(l,{}).get(y,0) for l in LOC.get(k,[]))
+            if k=='mobi':   # a DF tributa a Contraprestação Contratual (bruta) ou a Pecuniária (líquida do Desconto IFRS 09), conforme o ano
+                lo_=lo; cands=[L.get(n,{}).get(y,0) for n in ('Contraprestação Contratual','Contraprestação Pecuniária')]
+                cp=min(cands,key=lambda c:abs((c+lo_)-den)) if den else cands[0]
             if k=='lote6':   # Lote6.xlsx (2027) não tem detalhe: usa a proporção da 9906
                 tot=L.get('Receita Bruta',{}).get(y,0); lo=(lo/tot*den) if tot else 0
             if k in ALL_TAXED_OK: cp=den-lo
