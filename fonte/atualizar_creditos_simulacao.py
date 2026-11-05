@@ -115,6 +115,18 @@ def main(src, out, bases, pasta_df=None):
             print('  [DF] %s 2027: CBS mensal (linha 112) recalculado = -9,25%% x base mensal: %.1f (era %.1f)' % (aba, cbs_anual, sum(cur)))
         else:
             print('  [ATENÇÃO] %s 2027: CBS mensal da origem (%.1f) difere do CBS anual da DF (%.1f); linha 112 mantida' % (aba, sum(cur), cbs_anual))
+    # --- ISS Depois 2027 mensal (linha 114) das Escolas Norte/Sul: ISS passou a incidir sobre a Receita Bruta inteira; rateia o ISS anual da DF pela base mensal ---
+    for aba, k in (('ESCOLAS NORTE', 'norte'), ('ESCOLAS SUL', 'sul')):
+        if aba not in wb.sheetnames or k not in B_: continue
+        wsc = wb[aba]; Y = (B_[k]['years'].get('2027') or {}); ded = (Y.get('comp') or {}).get('DED')
+        if not ded: continue
+        iss_anual = ded['def'] - ded.get('fixed', 0.0)
+        cur = [wsc.cell(114, c).value for c in range(3, 15)]
+        base_m = [wsc.cell(129, c).value for c in range(3, 15)]
+        if not all(isinstance(x, (int, float)) for x in cur + base_m) or sum(base_m) == 0: continue
+        if abs(sum(cur) - iss_anual) < 1.0: continue
+        for i, c in enumerate(range(3, 15)): wsc.cell(114, c).value = iss_anual * base_m[i] / sum(base_m)
+        print('  [DF] %s 2027: ISS Depois mensal (linha 114) %.1f -> %.1f (rateio pela base mensal)' % (aba, sum(cur), iss_anual))
     # --- CBS/IBS anual (2026 e 2028–2033) da origem (linhas 112/113) = DF atual (bases.json) -----------------------------------
     # 2027 vem do mês a mês (conferido acima); os demais anos são digitados na origem e ficam velhos quando a DF muda.
     for aba, k in NOME.items():
