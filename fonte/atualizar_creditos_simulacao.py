@@ -99,6 +99,50 @@ def main(src, out, bases, pasta_df=None):
                 print('  [DF] CS MOBI 2027: CBS mensal (linha 112) recalculado pela DF (%s): %.1f' % (ok[0], sum(m[ok[0]])))
             else:
                 print('  [ATENÇÃO] CS MOBI 2027: soma mensal da DF não bate com o CBS anual (%.1f); linha 112 mantida' % cbs_anual)
+    # --- Conferência geral: CBS mensal da origem (linha 112, da origem) x CBS anual 2027 das bases (DF) ---------------
+    # Escolas Norte/Sul: a DF passou a tributar a Receita Bruta inteira (Operação + Financeira IFRIC 12); a linha 112 = −9,25% × base mensal (linha 129).
+    for aba, k in NOME.items():
+        if aba not in wb.sheetnames or k not in B_: continue
+        wsc = wb[aba]
+        cbs_anual = ((B_[k]['years'].get('2027') or {}).get('comp', {}).get('RB') or {}).get('cbs')
+        if cbs_anual is None: continue
+        cur = [wsc.cell(112, c).value for c in range(3, 15)]
+        if not all(isinstance(x, (int, float)) for x in cur): continue
+        if abs(sum(cur) - cbs_anual) < 1.0: continue
+        base_m = [wsc.cell(129, c).value for c in range(3, 15)]
+        if k in ('norte', 'sul') and all(isinstance(x, (int, float)) for x in base_m) and abs(-0.0925 * sum(base_m) - cbs_anual) < 1.0:
+            for i, c in enumerate(range(3, 15)): wsc.cell(112, c).value = -0.0925 * base_m[i]
+            print('  [DF] %s 2027: CBS mensal (linha 112) recalculado = -9,25%% x base mensal: %.1f (era %.1f)' % (aba, cbs_anual, sum(cur)))
+        else:
+            print('  [ATENÇÃO] %s 2027: CBS mensal da origem (%.1f) difere do CBS anual da DF (%.1f); linha 112 mantida' % (aba, sum(cur), cbs_anual))
+    # --- CBS/IBS anual (2026 e 2028–2033) da origem (linhas 112/113) = DF atual (bases.json) -----------------------------------
+    # 2027 vem do mês a mês (conferido acima); os demais anos são digitados na origem e ficam velhos quando a DF muda.
+    for aba, k in NOME.items():
+        if aba not in wb.sheetnames or k not in B_: continue
+        wsc = wb[aba]
+        for r_, fld in ((112, 'cbs'), (113, 'ibs')):
+            for j, y in enumerate(range(2026, 2034)):
+                if y == 2027: continue
+                col = 17 + j
+                cur = wsc.cell(r_, col).value
+                Y = B_[k]['years'].get(str(y))
+                if not Y or not isinstance(cur, (int, float)): continue
+                new = ((Y['comp'].get('RB') or {}).get(fld))
+                if new is None or abs(cur - new) < 0.5: continue
+                wsc.cell(r_, col).value = new
+                print('  [DF] %s %d: %s sobre a receita (linha %d) %.1f -> %.1f' % (aba, y, fld.upper(), r_, cur, new))
+    # --- LOTE 6, 2027: a planilha Lote6.xlsx passou a trazer o bloco real de 2027 (bases.json) -> coluna R (2027) da origem ---------
+    if 'LOTE 6' in wb.sheetnames and 'lote6' in B_ and B_['lote6']['years'].get('2027'):
+        wl6 = wb['LOTE 6']; Y = B_['lote6']['years']['2027']; C_ = Y['comp']
+        vals = {103: Y['atual']['DED'] - C_['DED']['def'], 104: C_['DED']['def'], 112: C_['RB']['cbs'], 113: C_['RB']['ibs'],
+                114: C_['DED']['def'], 116: C_['OPEX']['cbs'], 119: C_['SGA']['cbs'], 122: C_['DA']['cbs']}
+        for r_, v_ in vals.items():
+            cur = wl6.cell(r_, 18).value
+            try: curf = float(cur)
+            except Exception: continue
+            if abs(curf - v_) < 0.5: continue
+            wl6.cell(r_, 18).value = v_
+            print('  [DF] LOTE 6 2027: %s (linha %d) %.1f -> %.1f' % (wl6.cell(r_, 2).value, r_, curf, v_))
     pr = wb['Premissas']
     pr['B8'] = 'Alíquotas da simulação (CBS, IBS e redutores) — aplicadas às abas das empresas'; pr['B8'].font = B
     pr['B9'] = 'Ano'; pr['B9'].font = B

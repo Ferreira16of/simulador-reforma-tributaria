@@ -1,7 +1,7 @@
 // ===== Slide 20 (adicional): linhas consideradas no redutor =====
 const LIN={
 graos:{cp:['Receita Contraprestação (Transcerrados – CP Proteção, CP Fixa e Aditivo – CP Fixa)'],loc:['Receita Acessória'],no:'Receita Tarifária (Transcerrados e Aditivo); Remuneração do Ativo Financeiro e Construção (fora da base do CBS)'},
-mobi:{cp:['Contraprestação Pecuniária em 2027 (líquida do Desconto IFRS 09) e Contraprestação Contratual nos demais anos: é a base do CBS na DF'],loc:['Rec. Acessórias – Locação','Publicidade – Outdoor e Mercado','Naming Rights'],no:'Remuneração do Ativo Financeiro e Construção (fora da base do CBS)'},
+mobi:{cp:['Contraprestação Pecuniária (líquida do Desconto IFRS 09): é a base do CBS na DF em todos os anos'],loc:['Rec. Acessórias – Locação','Publicidade – Outdoor e Mercado','Naming Rights'],no:'Remuneração do Ativo Financeiro e Construção (fora da base do CBS)'},
 leste:{cp:['Contraprestação OPEX','Receita Financeira IFRS 09'],loc:['Locação Espaço p/ Construção (4 linhas)','ABL Interna – Todos Terminais','Publicidade – Todos Terminais','Naming Right'],no:'Receita de Construção'},
 norte:{cp:['Receita de Operação – Contábil','Receita Financeira (IFRIC 12)'],loc:[],no:'Receita Acessória (zerada) e Receita de Construção'},
 sul:{cp:['Receita de Operação – Contábil','Receita Financeira (IFRIC 12)'],loc:[],no:'Receita Acessória (zerada) e Receita de Construção'},
