@@ -22,14 +22,15 @@ const fz=(v,dd)=>Math.abs(v)<0.5*Math.pow(10,-dd)?'0':fmt(v,dd);
 
 const RDP={graos:{f:'Receita de Pedágio',c:'Receita de Contraprestação',l:'Receita Acessória'},mobi:{f:'Receita Bruta',c:'Receita de Contraprestação',l:'Receita Acessória / Locação'},leste:{f:'Receita Bruta',c:'Receita de Contraprestação',l:'Receita Acessória / Locação'},mercosul:{f:'Receita de Pedágio e CUF',c:'Receita de Contraprestação',l:'Receita Acessória'},norte:{f:'Receita Bruta',c:'Receita de Operação e Financeira IFRIC 12',l:'Receita Acessória'},sul:{f:'Receita Bruta',c:'Receita de Operação e Financeira IFRIC 12',l:'Receita Acessória'},mcp01:{f:'Receita Bruta',c:'Receita Bruta (contraprestação)',l:'Receita Acessória'},welfare:{f:'Receita Bruta',c:'Receita de Contraprestação',l:'Receita Acessória'},rota:{f:'Receita de Pedágio',c:'Receita de Contraprestação',l:'Receita Acessória'},lote6:{f:'Receita de Pedágio',c:'Receita de Contraprestação',l:'Receita Acessória'}};
 function rodapeDeb(k){
-  const cv=document.getElementById('cv');if(!cv||!RDP[k])return;
+  const cv=document.getElementById('cv');if(!cv||(k&&!RDP[k]))return;
   const fe=allEls().find(o=>o.e.dataset.fe||o.t.startsWith('Fonte: planilhas das empresas'));if(!fe)return;fe.e.dataset.fe=1;
-  const R=B.empresas[k].years[2027].comp.RB,cp=R.shareCP||0,lo=R.shareLoc||0,fu=Math.max(0,1-cp-lo),full=P.cbs[2027];
-  const rd=(P.redutor[2027]||0),rl=(P.redutorLoc[2027]||0),r2=v=>(v*100).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+'%';
-  const t=RDP[k],ln=[],den=-R.cbs/0.0925,vf=den*fu,vc=den*cp,vl=den*lo,mv=v=>' (R$ '+fmt(v,0)+' mil)';
-  if(fu>0.0005)ln.push([t.f+mv(vf),rate(full)]);
-  if(cp>0.0005)ln.push([t.c+mv(vc),r2(full*(1-rd))]);
-  if(lo>0.0005)ln.push([t.l+mv(vl),r2(full*(1-rl))]);
+  const rd=(P.redutor[2027]||0),rl=(P.redutorLoc[2027]||0),r2=v=>(v*100).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+'%',full=P.cbs[2027],mv=v=>' (R$ '+fmt(v,0)+' mil)';
+  let vf=0,vc=0,vl=0;
+  (k?[k]:ORS()).forEach(q=>{const R=B.empresas[q].years[2027].comp.RB,cp=R.shareCP||0,lo=R.shareLoc||0,den=-R.cbs/0.0925;vf+=den*Math.max(0,1-cp-lo);vc+=den*cp;vl+=den*lo});
+  const t=k?RDP[k]:{f:'Receita sem redução (Pedágio, Receita Bruta)',c:'Receita de Contraprestação',l:'Receita Acessória / Locação'},ln=[];
+  if(vf>0.0005*(vf+vc+vl)+1e-9)ln.push([t.f+mv(vf),rate(full)]);
+  if(vc>0.0005*(vf+vc+vl))ln.push([t.c+mv(vc),r2(full*(1-rd))]);
+  if(vl>0.0005*(vf+vc+vl))ln.push([t.l+mv(vl),r2(full*(1-rl))]);
   const tx=ln.map((a,i)=>(i===0?'Débito 2027: ':'')+a[0]+'. Utilizada a alíquota de '+a[1]);
   const pps=[...fe.e.querySelectorAll('.pp')];while(pps.length<tx.length){const c=pps[0].cloneNode(true);pps[pps.length-1].after(c);pps.push(c)}
   pps.forEach((pe,i)=>{if(i<tx.length){setP(pe,tx[i]);pe.style.textAlign='left'}else pe.remove()});
@@ -54,9 +55,9 @@ function dynDRE(si){
       if(ci===0)setTxt(o.e,p1(ma));else if(ci===1)setTxt(o.e,p1(mt));else if(ci===2)setTxt(o.e,pp(mt-ma),mt-ma>=0?GRN:RED);return}
   });
   // rodapé: Débito 2027 (alíquota por tipo de receita), substitui os quadros de alíquotas por ano
-  if(!cons){rodapeDeb(k);}
+  rodapeDeb(cons?null:k);
   // quadros de alíquotas (rodapé) ou bullets de impacto
-  if(true){document.querySelectorAll('#cv table.tb').forEach(tb=>{const bi=Math.round((parseFloat(tb.style.left)-141)/184.8);if(bi<0||bi>5)return;const y=2026+bi;
+  if(!cons){document.querySelectorAll('#cv table.tb').forEach(tb=>{const bi=Math.round((parseFloat(tb.style.left)-141)/184.8);if(bi<0||bi>5)return;const y=2026+bi;
     const rows=[...tb.rows];let sum=0,anyTot=null;
     rows.forEach(tr=>{const c=tr.cells;if(c.length<3)return;const lab=c[0].textContent.trim();
       const set=v=>{const sp=c[2].querySelector('span');if(sp)sp.textContent=v};
