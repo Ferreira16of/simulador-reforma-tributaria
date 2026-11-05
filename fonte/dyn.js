@@ -23,16 +23,16 @@ const fz=(v,dd)=>Math.abs(v)<0.5*Math.pow(10,-dd)?'0':fmt(v,dd);
 const RDP={graos:{f:'Receita de Pedágio',c:'Receita de Contraprestação',l:'Receita Acessória'},mobi:{f:'Receita Bruta',c:'Receita de Contraprestação',l:'Receita Acessória / Locação'},leste:{f:'Receita Bruta',c:'Receita de Contraprestação',l:'Receita Acessória / Locação'},mercosul:{f:'Receita de Pedágio e CUF',c:'Receita de Contraprestação',l:'Receita Acessória'},norte:{f:'Receita Bruta',c:'Receita de Operação (contraprestação)',l:'Receita Acessória'},sul:{f:'Receita Bruta',c:'Receita de Operação (contraprestação)',l:'Receita Acessória'},mcp01:{f:'Receita Bruta',c:'Receita Bruta (contraprestação)',l:'Receita Acessória'},welfare:{f:'Receita Bruta',c:'Receita de Contraprestação',l:'Receita Acessória'},rota:{f:'Receita de Pedágio',c:'Receita de Contraprestação',l:'Receita Acessória'},lote6:{f:'Receita de Pedágio',c:'Receita de Contraprestação',l:'Receita Acessória'}};
 function rodapeDeb(k){
   const cv=document.getElementById('cv');if(!cv||!RDP[k])return;
-  cv.querySelectorAll('table.tb').forEach(tb=>{if(tb.rows[0]&&/^Imposto/.test(tb.rows[0].textContent.trim()))tb.style.display='none'});
-  allEls().forEach(o=>{if(o.t.startsWith('Considerações | Alíquotas'))o.e.style.display='none'});
-  let bx=cv.querySelector('.deb27');if(!bx){bx=document.createElement('div');bx.className='deb27';bx.style.cssText='position:absolute;left:140.5px;top:566px;width:1025px;font:11px/1.55 Inter,Arial,sans-serif;color:#17365D';cv.appendChild(bx)}
+  const fe=allEls().find(o=>o.e.dataset.fe||o.t.startsWith('Fonte: planilhas das empresas'));if(!fe)return;fe.e.dataset.fe=1;
   const R=B.empresas[k].years[2027].comp.RB,cp=R.shareCP||0,lo=R.shareLoc||0,fu=Math.max(0,1-cp-lo),full=P.cbs[2027];
   const rd=(P.redutor[2027]||0),rl=(P.redutorLoc[2027]||0),r2=v=>(v*100).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+'%';
   const t=RDP[k],ln=[];
   if(fu>0.0005)ln.push([t.f,rate(full)]);
   if(cp>0.0005)ln.push([t.c,r2(full*(1-rd))]);
   if(lo>0.0005)ln.push([t.l,r2(full*(1-rl))]);
-  bx.innerHTML='<div style="font-weight:700;margin-bottom:2px">Débito 2027:</div>'+ln.map(a=>'<div>'+a[0]+'. Utilizada a alíquota de '+a[1]+'</div>').join('');
+  const tx=ln.map((a,i)=>(i===0?'Débito 2027: ':'')+a[0]+'. Utilizada a alíquota de '+a[1]);
+  const pps=[...fe.e.querySelectorAll('.pp')];while(pps.length<tx.length){const c=pps[0].cloneNode(true);pps[pps.length-1].after(c);pps.push(c)}
+  pps.forEach((pe,i)=>{if(i<tx.length)setP(pe,tx[i]);else pe.remove()});
 }
 function dynDRE(si){
   const cons=si===14,k=cons?null:(si===21?'lote6':OR9[si-5]),d=0,sc=1;
@@ -56,7 +56,7 @@ function dynDRE(si){
   // rodapé: Débito 2027 (alíquota por tipo de receita), substitui os quadros de alíquotas por ano
   if(!cons){rodapeDeb(k);}
   // quadros de alíquotas (rodapé) ou bullets de impacto
-  if(false){document.querySelectorAll('#cv table.tb').forEach(tb=>{const bi=Math.round((parseFloat(tb.style.left)-141)/184.8);if(bi<0||bi>5)return;const y=2026+bi;
+  if(true){document.querySelectorAll('#cv table.tb').forEach(tb=>{const bi=Math.round((parseFloat(tb.style.left)-141)/184.8);if(bi<0||bi>5)return;const y=2026+bi;
     const rows=[...tb.rows];let sum=0,anyTot=null;
     rows.forEach(tr=>{const c=tr.cells;if(c.length<3)return;const lab=c[0].textContent.trim();
       const set=v=>{const sp=c[2].querySelector('span');if(sp)sp.textContent=v};
