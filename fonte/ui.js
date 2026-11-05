@@ -17,10 +17,10 @@ function dynRedutor(){
   const cv=$('cv');const P0=Pzero();const y=2027;
   const rd=P.redutor[2027],rl=P.redutorLoc[2027],pn=v=>(v*100).toLocaleString('pt-BR',{maximumFractionDigits:2}),
    mk=(t,s,b,c,al,ex)=>`<div class="pp" style="font-size:${s}px;${b?'font-weight:700;':''}${c?'color:'+c+';':''}text-align:${al||'left'};${ex||''}">${t}</div>`;
-  const hdr=['Empresa','Contraprestação (COM redutor)','Locação (COM redução)','Linhas SEM redutor','% base CP '+y,'% base loc. '+y,'Efeito CBS+IBS '+y+' (R$ mil)','Efeito LL '+y+' (R$ mil)'];
-  const W=[112,215,205,263,58,58,146,147.8];
-  const n=ORS().length,rh=n>9?35:41;
-  let h=`<table id="tredut" class="tb" style="left:36.48px;top:128px;width:1204.8px"><colgroup>${W.map(w=>`<col style="width:${w}px">`).join('')}</colgroup><tr style="height:36px">${hdr.map((t,i)=>`<td style="background:#17365D;padding:2px 5px;vertical-align:middle">${mk(t,10.6,1,'#fff',i>3?'center':'left')}</td>`).join('')}</tr>`;
+  const hdr=['Empresa','Contraprestação (COM redutor)','Locação (COM redução)','Linhas SEM redutor','Débito 2027: receita (R$ mil) e alíquota utilizada'];
+  const W=[112,215,205,263,409.8];
+  const n=ORS().length,rh=n>9?30:36;
+  let h=`<table id="tredut" class="tb" style="left:36.48px;top:128px;width:1204.8px"><colgroup>${W.map(w=>`<col style="width:${w}px">`).join('')}</colgroup><tr style="height:36px">${hdr.map((t,i)=>`<td style="background:#17365D;padding:2px 5px;vertical-align:middle">${mk(t,10.6,1,'#fff','left')}</td>`).join('')}</tr>`;
   let tR=0,tL=0;
   ORS().forEach((k,i)=>{const L=LIN[k],r=CY(k,y),r0=compute(B.empresas[k],k,y,P0,B.audit);
     const dR=r&&r0?r.rt.RB-r0.rt.RB:0,dL=r&&r0?r.rt.LL-r0.rt.LL:0;tR+=dR;tL+=dL;
@@ -30,12 +30,11 @@ function dynRedutor(){
      +td(hasC?L.cp.map(t=>mk('• '+t,10.4,0,'#293746')).join(''):mk('—',10.6,0,'#5B6573'),hasC?'#FFF4D6':null)
      +td(hasL?L.loc.map(t=>mk('• '+t,10.4,0,'#293746')).join(''):mk('—',10.6,0,'#5B6573'),hasL?'#E3F2E6':null)
      +td(mk(L.no,10,0,'#5B6573'))
-     +td(mk(hasC?p1(shareOf(k,y)):'—',10.6,0,'#293746','center'))
-     +td(mk(hasL?(shareLoc(k,y)*100).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+'%':'—',10.6,0,'#293746','center'))
-     +td(mk(has?fmt(dR):'—',10.8,0,has?colS(dR):null,'center'))+td(mk(has?fmt(dL):'—',10.8,0,has?colS(dL):null,'center'))+'</tr>'});
-  h+=`<tr style="height:28px"><td colspan="6" style="background:#EAF0F7;padding:2px 5px;vertical-align:middle">${mk(`Total (${n} empresas)`,10.8,1,'#17365D')}</td><td style="background:#EAF0F7;padding:2px 5px;vertical-align:middle">${mk(fmt(tR),10.8,1,colS(tR),'center')}</td><td style="background:#EAF0F7;padding:2px 5px;vertical-align:middle">${mk(fmt(tL),10.8,1,colS(tL),'center')}</td></tr></table>`;
+     +td(debLinhas(k).ln.map(a=>mk(a[0]+': <b>'+a[1]+'</b>',10.2,0,'#293746')).join(''))+'</tr>'});
+  let rbT=0;ORS().forEach(k=>{rbT+=debLinhas(k).rb});
+  h+=`<tr style="height:28px"><td colspan="4" style="background:#EAF0F7;padding:2px 5px;vertical-align:middle">${mk(`Total (${n} empresas)`,10.8,1,'#17365D')}</td><td style="background:#EAF0F7;padding:2px 5px;vertical-align:middle">${mk('Receita Bruta 2027: R$ '+fmt(rbT)+' mil',10.8,1,'#17365D')}</td></tr></table>`;
   const ttl=`<div class="sh hast" style="left:36px;top:51px;width:1200px;height:33px"><div class="tx">${mk('REDUTORES | CONTRAPRESTAÇÃO '+pn(rd)+'% E LOCAÇÃO '+pn(rl)+'%',26,1,'#17365D')}</div></div>`
-   +`<div class="sh hast" style="left:36px;top:87px;width:1200px;height:19px"><div class="tx">${mk('Aplicados a todos os anos (2026–2033) | CBS do cenário: '+rate(P.cbs[2027])+' | efeito = com redutores − sem redutores',12,0,'#5B6573')}</div></div>`
+   +`<div class="sh hast" style="left:36px;top:87px;width:1200px;height:19px"><div class="tx">${mk('Aplicados a todos os anos (2026–2033) | CBS do cenário: '+rate(P.cbs[2027])+' | soma das receitas de cada empresa = Receita Bruta 2027',12,0,'#5B6573')}</div></div>`
    +`<div class="sh hast" style="left:36px;top:107px;width:900px;height:18px"><div class="tx">${mk('QUAIS RECEITAS RECEBEM A REDUÇÃO, EMPRESA A EMPRESA',12,1,'#17365D')}</div></div>`;
   cv.insertAdjacentHTML('beforeend',ttl+h);
   const t=$('tredut'),top=t.offsetTop+t.offsetHeight+8;

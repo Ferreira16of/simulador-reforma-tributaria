@@ -22,6 +22,18 @@ const fz=(v,dd)=>Math.abs(v)<0.5*Math.pow(10,-dd)?'0':fmt(v,dd);
 
 const RDP={graos:{f:'Receita de Pedágio',c:'Receita de Contraprestação',l:'Receita Acessória'},mobi:{f:'Receita Bruta',c:'Receita de Contraprestação',l:'Receita Acessória / Locação'},leste:{f:'Receita Bruta',c:'Receita de Contraprestação',l:'Receita Acessória / Locação'},mercosul:{f:'Receita de Pedágio e CUF',c:'Receita de Contraprestação',l:'Receita Acessória'},norte:{f:'Receita Bruta',c:'Receita de Operação e Financeira IFRIC 12',l:'Receita Acessória'},sul:{f:'Receita Bruta',c:'Receita de Operação e Financeira IFRIC 12',l:'Receita Acessória'},mcp01:{f:'Receita Bruta',c:'Receita Bruta (contraprestação)',l:'Receita Acessória'},welfare:{f:'Receita Bruta',c:'Receita de Contraprestação',l:'Receita Acessória'},rota:{f:'Receita de Pedágio',c:'Receita de Contraprestação',l:'Receita Acessória'},lote6:{f:'Receita de Pedágio',c:'Receita de Contraprestação',l:'Receita Acessória'}};
 const RDZ={graos:'Remuneração do Ativo Financeiro e Construção',mobi:'Remuneração do Ativo Financeiro',mercosul:'Receitas fora da base do CBS'};
+
+function debLinhas(k){
+  const rd=(P.redutor[2027]||0),rl=(P.redutorLoc[2027]||0),r2=v=>(v*100).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+'%',full=P.cbs[2027],mv=v=>' (R$ '+fmt(v,0)+' mil)';
+  const R=B.empresas[k].years[2027].comp.RB,cp=R.shareCP||0,lo=R.shareLoc||0,den=-R.cbs/0.0925,r=CY(k,2027),rb=r?r.atual.RB:den;
+  const vf=den*Math.max(0,1-cp-lo),vc=den*cp,vl=den*lo;let vz=rb-den;if(vz<0.5)vz=0;
+  const t=RDP[k],ln=[],e=0.0005*rb;
+  if(vf>e)ln.push([t.f+mv(vf),rate(full)]);
+  if(vc>e)ln.push([t.c+mv(vc),r2(full*(1-rd))]);
+  if(vl>e)ln.push([t.l+mv(vl),r2(full*(1-rl))]);
+  if(vz>0)ln.push([(RDZ[k]||'Receitas fora da base do CBS')+mv(vz),r2(0)]);
+  return {ln,rb};
+}
 function rodapeDeb(k){
   const cv=document.getElementById('cv');if(!cv||(k&&!RDP[k]))return;
   const fe=allEls().find(o=>o.e.dataset.fe||o.t.startsWith('Fonte: planilhas das empresas'));if(!fe)return;fe.e.dataset.fe=1;
