@@ -215,7 +215,7 @@ function dynS3(){const p2=v=>rate(v).replace('%','');
   })}
 function dynS4(){
   const FX=[['Fonte: planilha Aliquotas_Fluxo (aba Fluxo) e DF - Mensal das empresas, 2027.','Fonte: DF - Mensal 2027 de cada empresa (planilhas de origem), recalculada com as premissas da simulação.'],
-   ['Créditos de CAPEX conforme a planilha (zerados no fluxo mensal de Grãos do Piauí, MCP01 e Rota da Integração).','Créditos de CAPEX conforme a DF - Mensal de cada empresa (planilhas de origem).'],
+   ['Créditos de CAPEX conforme a planilha (zerados no fluxo mensal de Grãos do Piauí, MCP01 e Rota da Integração).','Créditos de CAPEX conforme a DF - Mensal de cada empresa (planilhas de origem); desconsiderados para Grãos do Piauí, Rodovias Mercosul, MCP01 e Rota da Integração.'],
    ['RT: aba Fluxo 2027,','RT: fluxo 2027 (DF - Mensal),'],['RT: planilha Fluxo 2027,','RT: fluxo 2027 (DF - Mensal),']];
   allEls().forEach(o=>rep(o.e,t=>{let r=t;FX.forEach(([a,b])=>{if(r.includes(a))r=r.replace(a,b)});return r}));
   allEls().forEach(o=>{if(o.t.startsWith('Fonte: planilha Aliquotas_Fluxo'))rep(o.e,s=>s.replace('(aba Premissas).','(aba Premissas); % de crédito (Regime Normal) da planilha Regime Tributário (Assertif).'))});

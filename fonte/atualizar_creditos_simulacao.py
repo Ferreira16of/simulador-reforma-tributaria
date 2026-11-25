@@ -60,6 +60,16 @@ def mobi_cbs_mensal_2027(pasta):
 def main(src, out, bases, pasta_df=None):
     wb = openpyxl.load_workbook(src)
     B_ = json.load(open(bases, encoding='utf8'))['empresas']
+    # --- Crédito de CAPEX desconsiderado (bases.json: semCapex) -> zera a origem (linhas 125-127: CBS, IBS, ISS de CAPEX, mensal 2027 e 2026-2033) ---
+    NOME_C = {'GRÃOS': 'graos', 'CS MOBI': 'mobi', 'BLOCO LESTE': 'leste', 'MERCOSUL': 'mercosul', 'ESCOLAS NORTE': 'norte', 'ESCOLAS SUL': 'sul',
+              'MCP01': 'mcp01', 'WELFARE': 'welfare', 'ROTA': 'rota'}
+    for aba_, k_ in NOME_C.items():
+        if aba_ in wb.sheetnames and (B_.get(k_) or {}).get('semCapex'):
+            for r_ in (125, 126, 127):
+                for c_ in range(3, 25):
+                    v_ = wb[aba_].cell(r_, c_).value
+                    if isinstance(v_, (int, float)): wb[aba_].cell(r_, c_).value = 0
+            print('  [CAPEX] %s: crédito de CAPEX desconsiderado (linhas 125-127 zeradas)' % aba_)
 
     # --- Conferência das linhas de ORIGEM com a DF (bases.json vem das DFs das empresas) ------------------------------------
     # Mercosul: a planilha original trazia ISS = 0 de 2028 a 2033 (Antes e Depois), embora a DF tenha ISS (e o total de deduções da DF o inclua).
@@ -259,6 +269,9 @@ def main(src, out, bases, pasta_df=None):
                                 '(Antes: -864 em 2028 a -1.278 em 2033; Depois: acompanha a transição, -864 em 2028 a 0 em 2033). As linhas 104 e 114 da aba MERCOSUL passaram a vir da DF '
                                 '(deduções da DF − PIS/COFINS − IIBB). Todas as outras empresas foram conferidas contra a DF e não tinham essa falha.')
         wl.cell(rr, 2).alignment = wl.cell(rr - 1, 2).alignment.copy() if wl.cell(rr - 1, 2).alignment else None
+        wl.cell(rr + 1, 2).value = ('Crédito de CAPEX desconsiderado (decisão de 25/11/2026) para Grãos do Piauí, Rodovias Mercosul, MCP01 e Rota da Integração: as linhas de CAPEX (CBS, IBS, ISS) '
+                                    'dessas quatro abas estão zeradas, em 2027 (mês a mês) e de 2026 a 2033; a base de CAPEX (linha 133) foi mantida só como referência. Nas demais empresas o CAPEX segue a DF.')
+        wl.cell(rr + 1, 2).alignment = wl.cell(rr, 2).alignment.copy() if wl.cell(rr, 2).alignment else None
     wb.save(out)
     print('fórmulas gravadas:', nform, '->', out)
 
